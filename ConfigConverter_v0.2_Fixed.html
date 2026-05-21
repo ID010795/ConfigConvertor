@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تبدیل کانفیگ V2Ray - v0.4</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Vazirmatn', sans-serif; }
+        body { background: #0f0f1a; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background-image: radial-gradient(ellipse at top, #1a1a3e 0%, transparent 50%), radial-gradient(ellipse at bottom right, #2d1b4e 0%, transparent 50%); }
+        .container { width: 100%; max-width: 500px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #e0e0e0; font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; text-shadow: 0 0 20px rgba(123, 44, 191, 0.5); }
+        .header p { color: #a0a0a0; font-size: 0.9rem; }
+        .lang-toggle { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .lang-btn { padding: 8px 20px; border: 1px solid #2d2d44; border-radius: 20px; background: transparent; color: #a0a0a0; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease; }
+        .lang-btn.active { background: #7b2cbf; color: white; border-color: #7b2cbf; }
+        .card { background: #16213e; border-radius: 24px; padding: 25px; border: 1px solid #2d2d44; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; color: #a0a0a0; font-size: 0.85rem; margin-bottom: 8px; font-weight: 500; }
+        .input-group textarea { width: 100%; background: #1a1a2e; border: 1px solid #2d2d44; border-radius: 12px; padding: 15px; color: #e0e0e0; font-size: 0.85rem; resize: none; height: 100px; transition: all 0.3s ease; direction: ltr; border: 1px solid #2d2d44; }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, #7b2cbf, #9d4edd); color: white; }
+        .btn-secondary { background: #1a1a2e; color: #e0e0e0; border: 1px solid #2d2d44; }
+        .result-section { margin-top: 25px; padding-top: 25px; border-top: 1px solid #2d2d44; display: none; }
+        .result-section.active { display: block; }
+        .result-box { background: #1a1a2e; border-radius: 12px; padding: 15px; margin-bottom: 20px; position: relative; border: 1px solid rgba(123, 44, 191, 0.2); }
+        .result-box label { display: block; color: #00d9ff; font-size: 0.8rem; margin-bottom: 8px; font-weight: 500; }
+        .result-box pre { color: #e0e0e0; font-size: 0.75rem; word-break: break-all; white-space: pre-wrap; direction: ltr; margin-bottom: 15px; font-family: monospace; }
+        .copy-btn { position: absolute; top: 10px; left: 10px; background: #7b2cbf; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; }
+        .status { text-align: center; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; display: none; }
+        .status.success { display: block; background: rgba(0, 217, 255, 0.1); color: #00d9ff; border: 1px solid rgba(0, 217, 255, 0.3); }
+        .qr-wrapper { text-align: center; background: white; padding: 10px; border-radius: 12px; display: block; width: 140px; margin: 10px auto; }
+        .qr-wrapper canvas { width: 120px !important; height: 120px !important; display: block; margin: 0 auto; }
+        
+        /* استایل باکس راهنما */
+        .help-box { background: linear-gradient(135deg, rgba(123, 44, 191, 0.15), rgba(157, 78, 221, 0.1)); border: 1px solid rgba(123, 44, 191, 0.3); border-radius: 12px; padding: 15px; margin-top: 20px; }
+        .help-box .title { color: #9d4edd; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .help-box .content { color: #a0a0a0; font-size: 0.8rem; line-height: 1.7; }
+        .help-box .content p { margin-bottom: 8px; }
+        .help-box .content p:last-child { margin-bottom: 0; }
+        
+        .footer { text-align: center; margin-top: 25px; color: #a0a0a0; font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="title">⚡ تبدیل کانفیگ V2Ray</h1>
+            <p id="subtitle">نسخه اختصاصی v0.4</p>
+        </div>
+        <div class="lang-toggle">
+            <button class="lang-btn active" id="btnFa" onclick="setLang('fa')">فارسی</button>
+            <button class="lang-btn" id="btnEn" onclick="setLang('en')">English</button>
+        </div>
+        <div class="card">
+            <div class="input-group">
+                <label id="inputLabel">کانفیگ ورودی (VLESS/Vmess)</label>
+                <textarea id="inputConfig" placeholder="لینک کانفیگ را اینجا وارد کنید..."></textarea>
+            </div>
+            <div id="status" class="status"></div>
+            <button class="btn btn-primary" onclick="convertConfig()">
+                ✨ <span id="convertBtnText">تبدیل کن</span>
+            </button>
+            <button class="btn btn-secondary" onclick="clearAll()">
+                🗑 <span id="clearBtnText">پاک کردن</span>
+            </button>
+            
+            <div class="result-section" id="resultSection">
+                <div class="result-box">
+                    <label>IP: 198.169.2.1</label>
+                    <button class="copy-btn" onclick="copyResult('outputConfig1')">کپی</button>
+                    <pre id="outputConfig1"></pre>
+                    <div class="qr-wrapper"><canvas id="qr1"></canvas></div>
+                </div>
+                <div class="result-box">
+                    <label>IP: 198.169.2.65</label>
+                    <button class="copy-btn" onclick="copyResult('outputConfig2')">کپی</button>
+                    <pre id="outputConfig2"></pre>
+                    <div class="qr-wrapper"><canvas id="qr2"></canvas></div>
+                </div>
+            </div>
+
+            <div class="help-box">
+                <div class="title">
+                    <span>📖</span>
+                    <span id="helpTitle">راهنما</span>
+                </div>
+                <div class="content" id="helpContent">
+                    <p>کانفیگ قدیمی را در بخش ورودی جایگذاری کنید و دکمه "تبدیل کن" را بزنید .</p>
+                    <p>کانفیگ جدید را کپی و در برنامه V2BOX یا هر برنامه مد نظرتان ، Import کنید .</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer" id="footer">version 0.4 | استایل اصلی حفظ شده</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script>
+        const translations = {
+            fa: {
+                title: '⚡ تبدیل کانفیگ V2Ray',
+                inputLabel: 'کانفیگ ورودی (VLESS/Vmess)',
+                inputPlaceholder: 'لینک کانفیگ را اینجا وارد کنید...',
+                convertBtn: 'تبدیل کن',
+                clearBtn: 'پاک کردن',
+                helpTitle: 'راهنما',
+                helpContent: '<p>کانفیگ قدیمی را در بخش ورودی جایگذاری کنید و دکمه "تبدیل کن" را بزنید .</p><p>کانفیگ جدید را کپی و در برنامه V2BOX یا هر برنامه مد نظرتان ، Import کنید .</p>',
+                successMsg: '✓ کانفیگ‌ها با موفقیت ساخته شدند',
+                errorEmpty: 'لطفا یک کانفیگ وارد کنید',
+                copied: 'کپی شد!'
+            },
+            en: {
+                title: '⚡ V2Ray Converter',
+                inputLabel: 'Input Config',
+                inputPlaceholder: 'Paste link here...',
+                convertBtn: 'Convert',
+                clearBtn: 'Clear',
+                helpTitle: 'Guide',
+                helpContent: '<p>Paste your old configuration into the input section and then click the "Convert" button.</p><p>Copy the new configuration and import it into the V2BOX program or any program of your choice.</p>',
+                successMsg: '✓ Both configs generated',
+                errorEmpty: 'Please enter a config',
+                copied: 'Copied!'
+            }
+        };
+
+        let currentLang = 'fa';
+
+        function setLang(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+            document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+            document.getElementById('title').textContent = t.title;
+            document.getElementById('inputLabel').textContent = t.inputLabel;
+            document.getElementById('inputConfig').placeholder = t.inputPlaceholder;
+            document.getElementById('convertBtnText').textContent = t.convertBtn;
+            document.getElementById('clearBtnText').textContent = t.clearBtn;
+            document.getElementById('helpTitle').textContent = t.helpTitle;
+            document.getElementById('helpContent').innerHTML = t.helpContent;
+            document.getElementById('btnFa').classList.toggle('active', lang === 'fa');
+            document.getElementById('btnEn').classList.toggle('active', lang === 'en');
+        }
+
+        function transform(input, newIp) {
+            let config = input.trim();
+            config = config.replace(/@([^:]+):/, '@' + newIp + ':');
+            let parts = config.split('?');
+            let main = parts[0];
+            let paramsPart = parts[1] || "";
+            let [params, hash] = paramsPart.split('#');
+            let searchParams = new URLSearchParams(params);
+            searchParams.set('path', '/api');
+            searchParams.delete('sni');
+            searchParams.set('alpn', 'h3,h2,http/1.1');
+            searchParams.set('fp', 'chrome');
+            searchParams.set('extra', '{"xPaddingBytes":"100-1000"}');
+            return main + '?' + decodeURIComponent(searchParams.toString()) + (hash ? '#' + hash : '');
+        }
+
+        function convertConfig() {
+            const input = document.getElementById('inputConfig').value.trim();
+            const status = document.getElementById('status');
+            const resultSection = document.getElementById('resultSection');
+
+            if (!input) {
+                status.textContent = translations[currentLang].errorEmpty;
+                status.style.display = 'block';
+                status.className = 'status error';
+                return;
+            }
+
+            try {
+                const res1 = transform(input, "198.169.2.1");
+                const res2 = transform(input, "198.169.2.65");
+                document.getElementById('outputConfig1').textContent = res1;
+                document.getElementById('outputConfig2').textContent = res2;
+                new QRious({ element: document.getElementById('qr1'), value: res1, size: 200 });
+                new QRious({ element: document.getElementById('qr2'), value: res2, size: 200 });
+                resultSection.style.display = 'block';
+                resultSection.classList.add('active');
+                status.textContent = translations[currentLang].successMsg;
+                status.style.display = 'block';
+                status.className = 'status success';
+            } catch (e) {
+                status.textContent = 'خطا در پردازش کانفیگ';
+                status.style.display = 'block';
+                status.className = 'status error';
+            }
+        }
+
+        function copyResult(id) {
+            const text = document.getElementById(id).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert(translations[currentLang].copied);
+            });
+        }
+
+        function clearAll() {
+            document.getElementById('inputConfig').value = '';
+            document.getElementById('resultSection').style.display = 'none';
+            document.getElementById('status').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
